@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "morgan": "^1.9.0",
     "sharp": "^0.20.4"
   }
 }
