@@ -3,7 +3,6 @@ var client = redis.createClient()
 var cache = {}
 
 cache.get = function (key) {
-    client.get
 }
 
 export function parsePage(body) {
@@ -34,6 +33,12 @@ export function parsePage(body) {
         } else {
             reject('no more books')
         }
+    })
+}
+
+export function parseBook() {
+    return new Promise((resolve, reject) => {
+
     })
 }
 

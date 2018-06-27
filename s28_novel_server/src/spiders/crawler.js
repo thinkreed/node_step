@@ -1,5 +1,5 @@
 
-
+var fs = require('fs')
 var cheerio = require('cheerio')
 var Request = require('request')
 var cache = []
@@ -8,7 +8,20 @@ var tasks = []
 export async function parse(entryUrl, siteParser) {
     tasks.push(entryUrl)
     let bookUrls = await parseLink(siteParser)
-    return bookUrls
+    siteParser.parseContent(bookUrls)
+}
+
+function getSiteConfig() {
+    return new Promise((resolve, reject) => {
+        let config = fs.readFile('../../configs/sites.json', (err, data) => {
+            if (err) {
+                reject(err)
+                return
+            }
+
+            let config = data.toJSON()
+        })
+    })
 }
 
 async function parseLink(siteParser) {
