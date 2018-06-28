@@ -1,6 +1,6 @@
 {
-    "31xiaoshuo":{
-        "site_parser":"31xiaoshuo",
-        "site_url":"http://www.31xs.com"
-    }
+    "sites": [{
+        "site_parser": "31xiaoshuo",
+        "site_url": "http://www.31xs.com"
+    }]
 }

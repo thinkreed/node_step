@@ -1,14 +1,17 @@
-
 var fs = require('fs')
 var cheerio = require('cheerio')
 var Request = require('request')
 var cache = []
 var tasks = []
 
-export async function parse(entryUrl, siteParser) {
-    tasks.push(entryUrl)
-    let bookUrls = await parseLink(siteParser)
-    siteParser.parseContent(bookUrls)
+export async function parse() {
+    let sites = await getSiteConfig()
+    sites.forEach(site => {
+        tasks.push(site.site_url)
+        let bookUrls = await parseLink(site.site_parser)
+        siteParser.parseContent(bookUrls)
+    })
+
 }
 
 function getSiteConfig() {
@@ -20,6 +23,8 @@ function getSiteConfig() {
             }
 
             let config = data.toJSON()
+            let sites = config["sites"]
+            resolve(sites)
         })
     })
 }
@@ -40,7 +45,7 @@ async function parseLink(siteParser) {
                         return
                     } else {
                         tasks.push(element)
-                    } 
+                    }
                 })
                 parseResults.book_urls.forEach(element => {
                     results.add(element)
