@@ -1,29 +1,35 @@
 var fs = require('fs')
 var cheerio = require('cheerio')
 var Request = require('request')
+var path = require('path')
 var cache = []
 var tasks = []
 
-export async function parse() {
+async function parse() {
     let sites = await getSiteConfig()
-    sites.forEach(site => {
+    sites.forEach(async function (site) {
         tasks.push(site.site_url)
-        let bookUrls = await parseLink(site.site_parser)
-        siteParser.parseContent(bookUrls)
+        let parserPath = path.resolve(__dirname, '../../src/spiders/sites/31xiaoshuo/31xiaoshuo.js')
+        let siteParser = require(parserPath)
+        let bookUrls = await parseLink(siteParser)
+        bookUrls.on('err', () => {
+            
+        })
+        console.log(bookUrls);
     })
 
 }
 
 function getSiteConfig() {
     return new Promise((resolve, reject) => {
-        let config = fs.readFile('../../configs/sites.json', (err, data) => {
+        let filePath = path.resolve(__dirname, '../../configs/sites.json')
+        let config = fs.readFile(filePath, (err, data) => {
             if (err) {
                 reject(err)
                 return
             }
 
-            let config = data.toJSON()
-            let sites = config["sites"]
+            let sites = JSON.parse(data)
             resolve(sites)
         })
     })
@@ -34,10 +40,13 @@ async function parseLink(siteParser) {
         let results = new Set()
         while (tasks) {
             let nextUrl = tasks.pop()
-            Request(nextUrl, (err, res, body) => {
+            if (!nextUrl) {
+                return
+            }
+            Request(nextUrl, async (err, res, body) => {
                 cache[nextUrl] = true
                 if (err) {
-                    continue
+                    return
                 }
                 let parseResults = await siteParser.parsePage(body)
                 parseResults.site_list.forEach(element => {
@@ -58,4 +67,8 @@ async function parseLink(siteParser) {
             reject(results)
         }
     })
+}
+
+module.exports = {
+    parse
 }

@@ -1,34 +1,35 @@
-var redis = require('redis')
-var client = redis.createClient()
-var cache = {}
+var cheerio = require('cheerio')
+var iconv = require('iconv-lite')
 
-cache.get = function (key) {
-}
-
-export function parsePage(body) {
+function parsePage(body) {
     return new Promise((resolve, reject) => {
-        const $ = cheerio.load(body)        
+        let html = iconv.decode(body, 'gbk')
+        const $ = cheerio.load(html, {
+            decodeEntities: false
+        })
         let lists = []
         let items = []
         $('a').each((idx, element) => {
             var $element = $(element)
             let link = $element.attr('href')
-            if (link.startwith('/')) {
+            if (link.startsWith('/')) {
                 lists.push({
                     title: $element.text().trim(),
                     url: 'https://www.31xs.com' + link,
                 })
-            } else if (link.startwith('https://www.31xs.com')) {
+            } else if (link.startsWith('https://www.31xs.com')) {
                 items.push({
                     title: $element.text().trim(),
                     url: link,
                 })
             }
         })
-        if (items.length > 0) {
+        console.log(items);
+        console.log(lists);
+        if (items.length > 0 || lists.length > 0) {
             resolve({
-                site_list:lists,
-                book_urls:items,
+                site_list: lists,
+                book_urls: items,
             })
         } else {
             reject('no more books')
@@ -36,14 +37,22 @@ export function parsePage(body) {
     })
 }
 
-export function parseBook() {
+function parseBook() {
     return new Promise((resolve, reject) => {
 
     })
 }
 
-export function parseCharpter() {
+function parseCharpter() {
     return new Promise((resolve, reject) => {
 
     })
+}
+
+function parseContent(bookUrls) {
+
+}
+
+module.exports = {
+    parsePage,
 }
