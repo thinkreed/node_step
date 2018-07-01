@@ -1,7 +1,9 @@
 var fs = require('fs')
+var http = require('http')
 var cheerio = require('cheerio')
-var Request = require('request')
 var path = require('path')
+var iconv = require('iconv-lite')
+var BufferHelper = require('bufferhelper')
 var cache = []
 var tasks = []
 
@@ -13,7 +15,7 @@ async function parse() {
         let siteParser = require(parserPath)
         let bookUrls = await parseLink(siteParser)
         bookUrls.on('err', () => {
-            
+
         })
         console.log(bookUrls);
     })
@@ -38,33 +40,38 @@ function getSiteConfig() {
 async function parseLink(siteParser) {
     return new Promise((resolve, reject) => {
         let results = new Set()
-        while (tasks) {
+        while (tasks.length > 0) {
             let nextUrl = tasks.pop()
-            if (!nextUrl) {
-                return
-            }
-            Request(nextUrl, async (err, res, body) => {
-                cache[nextUrl] = true
-                if (err) {
-                    return
-                }
-                let parseResults = await siteParser.parsePage(body)
-                parseResults.site_list.forEach(element => {
-                    if (element in cache) {
-                        return
+
+            http.get(nextUrl, (res) => {
+                let buf = new BufferHelper()
+                res.on('data', (data) => {
+                    buf.concat(data)
+                })
+                res.on('end', async () => {
+                    let body = buf.toBuffer()
+                    let html = iconv.decode(body, 'gbk').toString()
+                    cache[nextUrl] = true
+                    let parseResults = await siteParser.parsePage(html)
+                    parseResults.site_list.forEach(element => {
+                        if (element in cache) {
+                            return
+                        } else {
+                            tasks.push(element.url)
+                        }
+                    })
+                    parseResults.book_urls.forEach(element => {
+                        results.add(element.url)
+                    })
+                    if (results.length > 0) {
+                        resolve(results)
                     } else {
-                        tasks.push(element)
+                        reject(results)
                     }
                 })
-                parseResults.book_urls.forEach(element => {
-                    results.add(element)
-                })
+            }).on('error', (err) => {
+                console.log(err);
             })
-        }
-        if (results.length > 0) {
-            resolve(results)
-        } else {
-            reject(results)
         }
     })
 }

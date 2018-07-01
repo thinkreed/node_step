@@ -9,6 +9,7 @@
   "author": "thinkreed",
   "license": "MIT",
   "dependencies": {
+    "bufferhelper": "^0.2.1",
     "cheerio": "^1.0.0-rc.2",
     "iconv-lite": "^0.4.23",
     "koa": "^2.5.1",

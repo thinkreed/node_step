@@ -3,29 +3,24 @@ var iconv = require('iconv-lite')
 
 function parsePage(body) {
     return new Promise((resolve, reject) => {
-        let html = iconv.decode(body, 'gbk')
-        const $ = cheerio.load(html, {
-            decodeEntities: false
-        })
+        const $ = cheerio.load(body)
         let lists = []
         let items = []
         $('a').each((idx, element) => {
             var $element = $(element)
             let link = $element.attr('href')
-            if (link.startsWith('/')) {
+            if (link.startsWith('/list')) {
                 lists.push({
                     title: $element.text().trim(),
-                    url: 'https://www.31xs.com' + link,
+                    url: 'http://www.31xs.net' + link,
                 })
-            } else if (link.startsWith('https://www.31xs.com')) {
+            } else if (link.startsWith('http://www.31xs.com')) {
                 items.push({
                     title: $element.text().trim(),
                     url: link,
                 })
             }
         })
-        console.log(items);
-        console.log(lists);
         if (items.length > 0 || lists.length > 0) {
             resolve({
                 site_list: lists,
