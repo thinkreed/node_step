@@ -40,39 +40,32 @@ function getSiteConfig() {
 async function parseLink(siteParser) {
     return new Promise((resolve, reject) => {
         let results = new Set()
-        while (tasks.length > 0) {
-            let nextUrl = tasks.pop()
+        let nextUrl = tasks.pop()
 
-            http.get(nextUrl, (res) => {
-                let buf = new BufferHelper()
-                res.on('data', (data) => {
-                    buf.concat(data)
-                })
-                res.on('end', async () => {
-                    let body = buf.toBuffer()
-                    let html = iconv.decode(body, 'gbk').toString()
-                    cache[nextUrl] = true
-                    let parseResults = await siteParser.parsePage(html)
-                    parseResults.site_list.forEach(element => {
-                        if (element in cache) {
-                            return
-                        } else {
-                            tasks.push(element.url)
-                        }
-                    })
-                    parseResults.book_urls.forEach(element => {
-                        results.add(element.url)
-                    })
-                    if (results.length > 0) {
-                        resolve(results)
+        http.get(nextUrl, (res) => {
+            let buf = new BufferHelper()
+            res.on('data', (data) => {
+                buf.concat(data)
+            })
+            res.on('end', async () => {
+                let body = buf.toBuffer()
+                let html = iconv.decode(body, 'gbk').toString()
+                cache[nextUrl] = true
+                let parseResults = await siteParser.parsePage(html)
+                parseResults.site_list.forEach(element => {
+                    if (element in cache) {
+                        return
                     } else {
-                        reject(results)
+                        tasks.push(element.url)
                     }
                 })
-            }).on('error', (err) => {
-                console.log(err);
+                parseResults.book_urls.forEach(element => {
+                    results.add(element.url)
+                })
             })
-        }
+        }).on('error', (err) => {
+            console.log(err);
+        })
     })
 }
 
